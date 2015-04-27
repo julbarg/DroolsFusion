@@ -1,0 +1,129 @@
+package com.claro.rules.filtrado
+
+
+import com.claro.cpymes.dto.LogDTO;
+import org.drools.runtime.rule.WorkingMemoryEntryPoint;
+import com.claro.cpymes.enums.PriorityEnum;
+import com.claro.cpymes.util.Constant;
+import com.claro.cpymes.util.Util;
+import java.util.Date;
+
+declare LogDTO
+	@role(event)
+	@expires(15m)
+end
+
+/**rule TestCorrelation
+    when
+    	$log: LogDTO() from entry-point "logs-correlation"
+    	$log2: LogDTO(
+    		this != $log,
+    		this after [0m, 10m] $log,
+    		nodo == $log.nodo,
+    		nameCorrelation == "TEST CORRELATION")
+    	from entry-point "logs-correlation"
+    then
+    	$log.setNameEvent("TEST_CEP");
+    	$log.setPriority(PriorityEnum.ALERT.getValue());
+    	$log.setContCorrelate($log.getContCorrelate()+1);
+    	
+    	StringBuffer buffer = new StringBuffer(); 
+        buffer.append("TEST CORRELATION ");
+        buffer.append("<b>"+$log.getNameDeviceCorrelate());
+        buffer.append(", "+$log2.getNameDeviceCorrelate()+"</b>");
+        buffer.append(" interfaces CEP ");
+        buffer.append("<b>"+$log.getInterFace());
+        buffer.append(", "+$log2.getInterFace()+"</b>");
+        buffer.append(" descripción CEP ");
+        buffer.append("<b>"+$log.getDescriptionAlarm());
+        buffer.append(", "+$log2.getDescriptionAlarm()+"</b>");
+        
+        $log.setMessageDRL(buffer.toString());
+        
+        StringBuffer nameStr = new StringBuffer();
+        nameStr.append($log.getNameDeviceCorrelate()+", ");
+        nameStr.append($log2.getNameDeviceCorrelate());
+        
+         $log.setNameDeviceCorrelate(nameStr.toString());
+        
+        StringBuffer interfaceStr = new StringBuffer();
+        interfaceStr.append($log.getInterFace()+", ");
+        interfaceStr.append($log2.getInterFace());        
+        
+        $log.setInterFace(interfaceStr.toString());
+        
+        StringBuffer descripcionStr = new StringBuffer();
+        descripcionStr.append($log.getDescriptionAlarm()+", ");
+        descripcionStr.append($log2.getDescriptionAlarm());        
+        
+        $log.setDescriptionAlarm(descripcionStr.toString());
+        
+        if($log.getContCorrelate()>= Constant.NUMBER_ALARMS_CORRELATE && $log.getDate() == null){
+        	$log.setDate(new Date());
+        }
+        
+        WorkingMemoryEntryPoint logsCorrelation = drools.getEntryPoint("logs-correlation");
+        logsCorrelation.retract(logsCorrelation.getFactHandle($log2));
+end**/
+
+rule AfectacionMasivaCorrelation2
+    when
+    	$log: LogDTO() from entry-point "logs-correlation"
+    	$log2: LogDTO(
+    		this != $log,
+    		this after [0m, 10m] $log,
+    		nodo == $log.nodo,
+    		nameCorrelation == "AfectacionMasiva")
+    	from entry-point "logs-correlation"
+    then
+    	$log.setNameEvent("AfectacionMasiva");
+    	$log.setPriority(PriorityEnum.ALERT.getValue());
+    	$log.setContCorrelate($log.getContCorrelate()+1);
+    	
+    	StringBuffer buffer = new StringBuffer(); 
+        buffer.append("AFECTACIÓN MASIVA CORRELACION ");
+        buffer.append("<b>");
+        buffer.append($log.getNameDeviceCorrelate());
+        buffer.append(", "+$log2.getNameDeviceCorrelate());
+        buffer.append("</b>");
+        buffer.append(" interfaces CEP ");
+        buffer.append("<b>");
+        buffer.append($log.getInterFace());
+        buffer.append(", "+$log2.getInterFace());
+        buffer.append("</b>");
+        buffer.append(" descripción CEP ");
+        buffer.append("<b>");
+        buffer.append($log.getDescriptionAlarm());
+        buffer.append(", "+$log2.getDescriptionAlarm());
+        buffer.append("</b>");
+        
+        $log.setMessageDRL(buffer.toString());
+        
+        StringBuffer nameStr = new StringBuffer();
+        nameStr.append($log.getNameDeviceCorrelate()+", ");
+        nameStr.append($log2.getNameDeviceCorrelate());
+        
+         $log.setNameDeviceCorrelate(nameStr.toString());
+        
+        StringBuffer interfaceStr = new StringBuffer();
+        interfaceStr.append($log.getInterFace()+", ");
+        interfaceStr.append($log2.getInterFace());        
+        
+        $log.setInterFace(interfaceStr.toString());
+        
+        StringBuffer descripcionStr = new StringBuffer();
+        descripcionStr.append($log.getDescriptionAlarm()+", ");
+        descripcionStr.append($log2.getDescriptionAlarm());      
+        
+        $log.setDescriptionAlarm(descripcionStr.toString());
+        
+        if($log.getContCorrelate()>= Constant.NUMBER_ALARMS_CORRELATE && $log.getDate() == null){
+        	$log.setDate(new Date());
+        } else if($log.getContCorrelate()>= Constant.NUMBER_ALARMS_CORRELATE_MAX){
+        	WorkingMemoryEntryPoint logsCorrelation = drools.getEntryPoint("logs-correlation");
+        	logsCorrelation.retract(logsCorrelation.getFactHandle($log));
+        }
+        
+        WorkingMemoryEntryPoint logsCorrelation = drools.getEntryPoint("logs-correlation");
+        logsCorrelation.retract(logsCorrelation.getFactHandle($log2));
+end

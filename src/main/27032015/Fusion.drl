@@ -1,0 +1,94 @@
+package com.sample
+ 
+import com.sample.DroolsTest.Message;
+import com.claro.cpymes.dto.LogDTO;
+import java.util.ArrayList;
+import org.drools.runtime.rule.WorkingMemoryEntryPoint;
+
+declare LogDTO
+	@role(event)
+end
+
+
+rule "Afectacino Masiva Correlation"
+    when
+    	$log: LogDTO() from entry-point "logs-filtrado"
+        $log2: LogDTO(
+        	this!=$log, 
+        	this after $log, 
+        	nameCorrelation == $log.nameCorrelation, 
+        	nodo == $log.nodo)
+        from entry-point "logs-correlation"
+    then
+        System.out.println( "Fusion Correlation "+ $log.getNameEvent()+ " - "+$log2.getNameEvent());
+        drools.getEntryPoint("logs-correlation").insert(new LogDTO());
+end
+
+rule "Afectacion Masiva"
+    when
+    	$log: LogDTO()
+    then
+        System.out.println( "Filtrado: "+ $log.getNameEvent());
+end
+
+rule AfectacionMasivaCorrelation2
+    when
+    	$log: LogDTO() from entry-point "logs-correlation"
+    	$log2: LogDTO(
+    		this != $log,
+    		this after [0m, 15m] $log,
+    		nodo == $log.nodo,
+    		nameCorrelation == $log.nameCorrelation)
+    	from entry-point "logs-correlation"
+    then
+    	$log.setContCorrelate($log.getContCorrelate()+1);
+    	
+    	StringBuffer buffer = new StringBuffer(); 
+        buffer.append("AFECTACIÓN MASIVA ");
+        buffer.append("<b>"+$log.getName()+"</b>");
+        buffer.append(" interfaces ");
+        buffer.append("<b>"+$log.getInterFace()+"</b>");
+        buffer.append("<b>, "+$log2.getInterFace()+"</b>");
+        buffer.append(" descripción ");
+        buffer.append("<b>"+$log.getDescriptionAlarm()+"</b>");
+        buffer.append("<b>,"+$log2.getDescriptionAlarm()+"</b>");
+        
+        $log.setMessageDRL(buffer.toString());
+        
+        StringBuffer interfaceStr = new StringBuffer();
+        interfaceStr.append("<b>"+$log.getInterFace()+"</b>");
+        interfaceStr.append("<b>, "+$log2.getInterFace()+"</b>");        
+        
+        $log.setInterFace(interfaceStr.toString());
+        
+        StringBuffer descripcionStr = new StringBuffer();
+        descripcionStr.append("<b>"+$log.getDescriptionAlarm()+"</b>");
+        descripcionStr.append("<b>,"+$log2.getDescriptionAlarm()+"</b>");        
+        
+        $log.setDescriptionAlarm(descripcionStr.toString());
+        
+        WorkingMemoryEntryPoint logsCorrelation = drools.getEntryPoint("logs-correlation");
+        logsCorrelation.retract(logsCorrelation.getFactHandle($log2));
+end
+
+
+rule TestFiltrado
+    when
+    	$log: LogDTO(name != "", nameEvent != "", priority in ("alert"))
+    then
+    	StringBuffer buffer = new StringBuffer();
+	    buffer.append("TEST ");
+        buffer.append("<b>"+$log.getName()+"</b>");
+        buffer.append(" interface ");
+        buffer.append("<b>"+$log.getInterFace()+"</b>");
+        buffer.append(" descripción ");
+        buffer.append("<b>"+$log.getDescriptionAlarm()+"</b>");
+        
+        $log.setMessageDRL(buffer.toString());
+        $log.setRelevant(true);
+        $log.setCorrelation(true);
+        $log.setNameCorrelation("TESTCEP");
+        $log.setNodo("TESTCEP");
+        
+        
+end
