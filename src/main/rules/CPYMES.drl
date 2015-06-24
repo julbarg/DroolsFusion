@@ -4,14 +4,16 @@ import com.claro.cpymes.dto.KeyCatalogDTO;
 import com.claro.cpymes.dto.LogDTO;
 import com.claro.cpymes.entity.AlarmCatalogEntity;
 import com.claro.cpymes.enums.SeverityEnum;
+import com.claro.cpymes.enums.StateEnum;
 import com.claro.cpymes.util.Constant;
+
 import java.util.HashMap;
 
 
 global HashMap<KeyCatalogDTO, AlarmCatalogEntity> catalog;
 
 rule "Marcacion Severity"
-	no-loop 
+	no-loop  
 	salience 0
 	when
 		$log:LogDTO(OID != null && OID.length()>2)
@@ -29,8 +31,8 @@ rule "Marcacion Severity"
 			$log.setMessageDRL($log.getTranslatedLine());
 		}
 		$log.setRelevant(true);
-		//Tener en cuenta que el UPDATE cancela la Evaluacion actual de reglas y reinicia la Evaluacion con los nuevos cambios
-		//Las reglas que no se quieran reevaluar se debe marcar como no-loop 
+		$log.setState(StateEnum.NO_SAVE.getValue());
+		
 		update($log);	
 		
 end
@@ -45,17 +47,20 @@ rule "Afectacion Masiva"
         		"mplsTunnelDown",
         		"hwAlarmEthernetPortOffline",
         		"hwOpticsPowerOutOfRangeAlarmTrap",
+        		"hwGonuLinkLOFTrap",
         		"GonuLinkLOF",
+        		"hwGponnniOntLinkLosAlarmTrap",
         		"GponnniOntLinkLosAlarm",
+        		"hwGponOltLOSAlarmTrap",
         		"GponOltLOSAlarm",
-        		"hwGponEthernetPortLossOfSignelOccurAlarmTrap",
-        		"hwGponE1T1PortLOSOccurAlarmTrap",
-        		"hwGponProfOltTFAlarmTrap",
         		"hwGponProfNumerousOntsPowerOffAlarmTrap",
-        		"zxGponUnCfgSnIdxcon"),
+        		"hwGponProfOntIsRogueOntAlarmTrap",
+        		"hwXponProfOltLOSAlarmTrap",
+        		"zxGponOltLOS"),
 			severity in (
 	    		"AS",
-	    		"PAS"))
+	    		"PAS",
+	    		"NAS"))
     then
     	StringBuffer buffer = new StringBuffer(); 
         buffer.append("AFECTACIÓN MASIVA ");
@@ -69,9 +74,11 @@ rule "Afectacion Masiva"
         buffer.append(Constant.DESCRIPCION);
         buffer.append(Constant.BOLD_INIT);
         buffer.append($log.getDescriptionAlarm());
-        buffer.append(Constant.BOLD_INIT);
+        buffer.append(Constant.BOLD_END);
         
         $log.setMessageDRL(buffer.toString());
+        $log.setState(StateEnum.ACTIVO.getValue());
+        $log.setSendIVR(true);
 end
 
 
@@ -81,20 +88,34 @@ rule AfectacionMasivaCorelacion
     when
     	$log: LogDTO(
         	nameEvent in (
+        		"hwGponEthernetPortSignalRecoverAlarmTrap",
+        		"hwGponEthernetPortLossOfSignelOccurAlarmTrap",        		
         		"linkDown",
+        		"LinkDown",        		
         		"tmnxEqPortFailure",        		
-        		"tmnxEqPortSFPRemoved",        		
+        		"tmnxEqPortSFPRemoved",
         		"hwAlarmEthernetMacLost",        		
         		"hwAlarmLOSOccurs",
-        		"GonuLinkLOS",        		
+        		"hwGonuLinkLOSTrap",
+        		"GonuLinkLOS",
+        		"hwGponOntSFAlarmTrap",
         		"GponOntSFAlarm",
+        		"hwGponOntLOSAlarmTrap",
         		"GponOntLOSAlarm",
+        		"hwGponOntSUFAlarmTrap",
         		"GponOntSUFAlarm",
-        		"GponOntConfigRecoveryFailAlarm",
+        		"hwGponOntConfigRecoveryFailAlarmTrap", 		
+        		"GponOntConfigRecoveryFailAlarm",   
+        		"hwGponOntResetByWatchdogAlarmTrap",     		
         		"GponOntResetByWatchdogAlarm",        		
-        		"hwGponONTGEMPortCfgChangeTrap",        		
-        		"zxAnUserOutCVid",        		
-        		"zxAnUserOutSVid"),
+        		"hwGponONTGEMPortCfgChangeTrap",
+        		"zxGponOltLOSi",
+        		"zxGponOltLOFi",
+        		"zxGponOltSFi",
+        		"zxGponOntLOS",
+        		"zxGponOntLOF",
+        		"zxGponOltLOS",
+        		"zxGponOltLOF"),
     		severity in (
     			"AS",
     			 "PAS"))
@@ -102,31 +123,30 @@ rule AfectacionMasivaCorelacion
 		$log.setCorrelation(true);
 		$log.setNameCorrelation("AfectacionMasiva");
 		$log.setNameDeviceCorrelate($log.getName());
+		$log.setState(StateEnum.ACTIVO.getValue());
+		$log.setSendIVR(true);
 end
 
 
-rule "Reinicio Puerto Equipo Intermitencia"
+rule "Reinicio Puerto Equipo Intermitencia PAS"
 	salience -1
 	when			
 		$log: LogDTO(
         	nameEvent in (
-        		"linkDown",        		
-        		"tmnxEqPortFailure",        		      		
-        		"tmnxEqPortSFPRemoved",      		
-        		"hwAlarmEthernetMacLost",        		        		
-        		"hwAlarmLOSOccurs",        		
-        		"GonuLinkLOS",        		        		
-        		"GponOntSFAlarm",        		
-        		"GponOntLOSAlarm",        		        		
-        		"GponOntSUFAlarm",        		
+        		"tmnxEqPortSFPRemoved",        		
+        		"hwAlarmEthernetMacLost",        		      		
+        		"GponOntSUFAlarm",      		
+        		"hwGponOntSUFAlarmTrap",        		        		
         		"GponOntConfigRecoveryFailAlarm",        		
-        		"GponOntResetByWatchdogAlarm",        		        		
-        		"hwGponONTGEMPortCfgChangeTrap",        		    		
-        		"zxAnUserOutCVid",        		
-        		"zxAnUserOutSVid"),
+        		"hwGponOntConfigRecoveryFailAlarmTrap",        		        		
+        		"GponOntResetByWatchdogAlarm",        		
+        		"hwGponOntResetByWatchdogAlarmTrap",        		        		
+        		"hwGponONTGEMPortCfgChangeTrap",        		
+        		"hwAlarmEthernetPortStatusChanges"),
     		severity in (
     			"AS",
-    			 "PAS"))
+    			"PAS",
+    			"NAS"))
     then
     	StringBuffer buffer = new StringBuffer(); 
         buffer.append("REINICIOS DE PUERTO O EQUIPO (INTERMITENCIA) ");
@@ -140,14 +160,15 @@ rule "Reinicio Puerto Equipo Intermitencia"
         buffer.append(Constant.DESCRIPCION);
         buffer.append(Constant.BOLD_INIT);
         buffer.append($log.getDescriptionAlarm());
-        buffer.append(Constant.BOLD_INIT);
+        buffer.append(Constant.BOLD_END);
         
         $log.setMessageDRL(buffer.toString());
+        $log.setState(StateEnum.ACTIVO.getValue());
 end
 
 
 
-
+/*/No found
 rule "Posible Afectacion"
 	salience -1
 	when			
@@ -194,11 +215,14 @@ rule "Posible Afectacion"
         buffer.append(Constant.DESCRIPCION);
         buffer.append(Constant.BOLD_INIT);
         buffer.append($log.getDescriptionAlarm());
-        buffer.append(Constant.BOLD_INIT);
+        buffer.append(Constant.BOLD_END);
+        
+        buffer.append("<hr/>");
+        buffer.append(" ORIGINAL KOU: <b>");
+        buffer.append($log.getTranslatedLine()+"</b>");
         
         $log.setMessageDRL(buffer.toString());	
-end
-
+end*/
 
 
 
@@ -220,7 +244,8 @@ rule "Problema Alimentacion Energia"
         		"hwGponProfNumerousOntsPowerOffAlarmTrap"), 
     		severity in (
     			"AS",
-    			 "PAS"))
+    			 "PAS",
+    			 "NAS"))
     then
     	StringBuffer buffer = new StringBuffer();
         buffer.append("PROBLEMA EN ALIMENTACIÓN (ENERGÍA) ");
@@ -234,88 +259,84 @@ rule "Problema Alimentacion Energia"
         buffer.append(Constant.DESCRIPCION);
         buffer.append(Constant.BOLD_INIT);
         buffer.append($log.getDescriptionAlarm());
-        buffer.append(Constant.BOLD_INIT);
+        buffer.append(Constant.BOLD_END);
         
         $log.setMessageDRL(buffer.toString());
+        $log.setState(StateEnum.ACTIVO.getValue());
 end
-
-
-
 
 rule "Problema Tarjeta Modulo Equipo"
 	salience -1
 	when		
 		$log: LogDTO(
         	nameEvent in (
-        		"mplsLdpFailedInitSessionThresholdExceeded",
-        		"mplsLdpPathVectorLimitMismatch",
         		"tmnxEqCardFailure",
         		"tmnxEqCardRemoved",
         		"tmnxEqFlashDataLoss",
         		"sbiBootConfig",
         		"sbiBootSnmpd",
-        		"tmnxSvcPEDiscPolServOperStatChg",
-        		"vRtrMplsStateChange",
-        		"vRtrMplsIfStateChange",
-        		"vRtrMplsLspDown",
-        		"vRtrMplsLspPathDown",
-        		"DevBoardDisappeared",
-        		"DevBoardStaChgOffLine",
-        		"DevBoardMisMatch",
-        		"DevBoardHardFault",
-        		"DevBoardFault",
-        		"DevBoardRestore",
-        		"DevBoardReplaced",
-        		"DevBoardHardRestore",
-        		"DevSubBoardMisMatch",
-        		"DevSubBoardReplaced","hwAlarmEthernetPortLinkStatusChange",
-        		"hwAlarmLinkBetweenStackPortsRecover",
-        		"hwGponOltTFlarmTrap",
-        		"hwGponOltOpticalTransceiverAbsentAlarmTrap",
-        		"hwPortTypeAdaptFaultAlarmTrap",
-        		"hwGponProfOltLOSAlarmTrap"), 
+        		"hwDevBoardDisappearedTrap",
+        		"hwDevBoardStaChgOffLineTrap",
+        		"hwDevBoardMisMatchTrap",
+        		"hwDevBoardHardFaultTrap",
+        		"hwDevBoardFaultTrap",
+        		"zxGponOltPEEi",
+        		"zxGponOntPee"), 
     		severity in (
     			"AS",
-    			 "PAS"))
+    			 "PAS",
+    			 "NAS"))
     then    	
 		StringBuffer buffer = new StringBuffer();
-	    buffer.append("PROBLEMA EN ALIMENTACIÓN (ENERGÍA) ");
+	    buffer.append("PROBLEMA EN TARJETA, MODULO O EQUIPO ");
 	    buffer.append(Constant.BOLD_INIT);
         buffer.append($log.getName());
+        buffer.append(Constant.BOLD_END);
+        buffer.append(Constant.INTERFACE);
+        buffer.append(Constant.BOLD_INIT);
+        buffer.append($log.getInterFace());
         buffer.append(Constant.BOLD_END);
         buffer.append(Constant.DESCRIPCION);
         buffer.append(Constant.BOLD_INIT);
         buffer.append($log.getDescriptionAlarm());
-        buffer.append(Constant.BOLD_INIT);
-	        
-	    $log.setMessageDRL(buffer.toString());
+        buffer.append(Constant.BOLD_END);
+        
+        $log.setMessageDRL(buffer.toString());
+	    $log.setState(StateEnum.ACTIVO.getValue());
 end
 
 
 
-
-rule "Servicio Caido Puerto NoMAC"
+rule "Servicio Caido Puerto NoMAC AS"
 	salience -1
 	when		
 		$log: LogDTO(
         	nameEvent in (
         		"linkDown",
+        		"LinkDown",
         		"tmnxEqPortFailure",
         		"tmnxEqPortSFPRemoved",
-        		"hwAlarmEthernetMacLost",
+        		"hwAlarmEthernetMacLost", 
         		"hwAlarmLOSOccurs",
         		"GonuLinkLOS",
-        		"GponOntSFAlarm",
-        		"GponOntLOSAlarm",
-        		"GponOntSUFAlarm",
-        		"GponOntConfigRecoveryFailAlarm",
-        		"GponOntResetByWatchdogAlarm",
-        		"hwGponONTGEMPortCfgChangeTrap",
-        		"zxAnUserOutCVid",
-        		"zxAnUserOutSVid"), 
+        		"hwGonuLinkLOSTrap",
+        		"GponOntSFAlarm/",
+        		"hwGponOntSFAlarmTrap",
+        		"GponOntLOSAlarm/",
+        		"hwGponOntLOSAlarmTrap",
+        		"zxGponOltLOSi",
+        		"zxGponOltLOFi",
+        		"zxGponOltSFi",
+        		"zxGponOntLOS",
+        		"zxGponOntLOF",
+        		"zxGponOltLOS",
+        		"zxGponOltLOF",
+        		"zxGponOnuOpticalTransceiverLos"
+        		), 
     		severity in (
     			"AS",
-    			 "PAS"))
+    			"PAS",
+    			"NAS"))
 											
        
     then
@@ -332,9 +353,11 @@ rule "Servicio Caido Puerto NoMAC"
         buffer.append(Constant.DESCRIPCION);
         buffer.append(Constant.BOLD_INIT);
         buffer.append($log.getDescriptionAlarm());
-        buffer.append(Constant.BOLD_INIT);
+        buffer.append(Constant.BOLD_END);
         
         $log.setMessageDRL(buffer.toString());
+        $log.setState(StateEnum.ACTIVO.getValue());
+        $log.setSendIVR(true);        
 end
 
 
@@ -347,10 +370,12 @@ rule "Temperatura Alta"
         	nameEvent in (
         		"tmnxEnvTempTooHigh",
         		"envCommAlarm",
-        		"hwOpticsPortTemperatureHighAlarmTrap"), 
+        		"hwOpticsPortTemperatureHighAlarmTrap",
+        		"hwDevBoardTemperatureTooHighTrap"), 
     		severity in (
     			"AS",
-    			 "PAS"))  
+    			 "PAS",
+    			 "NAS"))  
     then
 	    StringBuffer buffer = new StringBuffer();
         buffer.append("TEMPERATURA ALTA ");
@@ -364,9 +389,14 @@ rule "Temperatura Alta"
         buffer.append(Constant.DESCRIPCION);
         buffer.append(Constant.BOLD_INIT);
         buffer.append($log.getDescriptionAlarm());
-        buffer.append(Constant.BOLD_INIT);
+        buffer.append(Constant.BOLD_END);
+        
+        buffer.append("<hr/>");
+        buffer.append(" ORIGINAL KOU: <b>");
+        buffer.append($log.getTranslatedLine()+"</b>");
         
         $log.setMessageDRL(buffer.toString());
+        $log.setState(StateEnum.ACTIVO.getValue());
 end
 
 
@@ -377,37 +407,20 @@ rule "Atenuacion Potencia Optica"
 	when	
 		$log: LogDTO(
         	nameEvent in (
-        		"risingAlarm",
-        		"hwAlarmLOLOccurInBITSInputPort",
         		"hwOpticsTxPowerOutOfRangeAlarmTrap",
         		"hwOpticsRxPowerOutOfRangeAlarmTrap",
-        		"hwOpticsRxPowerRestoreAlarmTrap",
-        		"hwOpticsPowerOutOfRangeAlarmTrap",
-        		"GonuLinkLOF",
         		"hwGonuTxPowerExceedThreAlarmTrap",
-        		"GonuRxPo",
-        		"GponnniOntLinkLosAlarm",
-        		"GponnniOntLinkLofAlarm",
-        		"GponnniOntLinkLosRestoreAlarm",
-        		"GponOltLOSAlarm",
-        		"GponOltLOSRecoverAlarm",
         		"hwGponRemoteOpticalModuleExceedAlarmThresAlarmTrap",
         		"hwGponLocalOpticalModuleExceedWarnThresAlarmTrap",
-        		"hwGponOntE1T1PortStatusRecoverAlarmTrap",
-        		"hwGponEthernetPortLossOfSignelOccurAlarmTrap",
-        		"hwGponE1T1PortLOSOccurAlarmTrap",
-        		"hwGponProfOntShellOpenedAlarmTrap",
-        		"hwGponProfOntIsRogueOntAlarmTrap",
         		"hwXponProfLocalOpticalModuleExceedAlramThresAlarmTrap",
         		"hwXponProfRemoteOpticalModuleExceedAlarmThresAlarmTrap",
         		"hwXponProfLocalOpticalModuleExceedWarnThresAlarmTrap",
-        		"hwXponProfRemoteOpticalModuleExceedWarnThresAlarmTrap",
-        		"hwGponProfEthernetPortLossOfSignelOccurAlarmTrap",
-        		"hwGponProfE1T1PortLOSOccurAlarmTrap",
-        		"hwGponProfOltLOSAlarmTrap"),
+        		"zxGponOltRxPowerAbnormalInformi",
+        		"zxGponOltRxPowerAlarmi"),
     		severity in (
     			"AS",
-    			 "PAS"))
+    			 "PAS",
+    			 "NAS"))
     then
         StringBuffer buffer = new StringBuffer();
         buffer.append("VARIACIÓN EN POTENCIA OPTICA ");
@@ -421,7 +434,40 @@ rule "Atenuacion Potencia Optica"
         buffer.append(Constant.DESCRIPCION);
         buffer.append(Constant.BOLD_INIT);
         buffer.append($log.getDescriptionAlarm());
-        buffer.append(Constant.BOLD_INIT);
+        buffer.append(Constant.BOLD_END);
         
         $log.setMessageDRL(buffer.toString());
+        $log.setState(StateEnum.ACTIVO.getValue());
 end
+
+rule "Caida Troncal OLT"
+	salience -1
+	when	
+		$log: LogDTO(
+        	nameEvent in (
+        		"hwXponProfOltLOSAlarmTrap",
+        		"zxGponOltLOS"),
+    		severity in (
+    			"AS",
+    			 "PAS",
+    			 "NAS"))
+    then
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("CAIDA TRONCAL OLT ");
+        buffer.append(Constant.BOLD_INIT);
+        buffer.append($log.getName());
+        buffer.append(Constant.BOLD_END);
+        buffer.append(Constant.INTERFACE);
+        buffer.append(Constant.BOLD_INIT);
+        buffer.append($log.getInterFace());
+        buffer.append(Constant.BOLD_END);
+        buffer.append(Constant.DESCRIPCION);
+        buffer.append(Constant.BOLD_INIT);
+        buffer.append($log.getDescriptionAlarm());
+        buffer.append(Constant.BOLD_END);
+        
+        $log.setMessageDRL(buffer.toString());
+        $log.setState(StateEnum.ACTIVO.getValue());
+end
+
+

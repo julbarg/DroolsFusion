@@ -1,0 +1,690 @@
+package com.claro.rules.filtrado
+
+import com.claro.cpymes.dto.LogDTO;
+import com.claro.cpymes.dto.RestoreEventAlarmDTO;
+
+	
+rule "Marcacion Evento de Recupracion"
+	no-loop  
+	salience 0
+    when
+    	$log: LogDTO(
+        	nameEvent in (
+        		"linkUp",
+        		"Linkup",
+        		"tmnxEqPortSFPInserted",
+        		"hwAlarmEthernetPortActive",
+        		"GponOntSFRecoverAlarm",
+        		"hwGponOntSFRecoverAlarmTrap",
+        		"GponOntLOSRecoverAlarm",
+        		"hwGponOntLOSRecoverAlarmTrap",
+        		"zxGponOltLosiRestore",
+        		"zxGponOltLOFiRestore",
+        		"zxGponOltSFiRestore",
+        		"zxGponOntLOSRestore",
+        		"zxGponOntLOFRestore",
+        		"zxGponOltLOSRestore",
+        		"zxGponOltLOFRestore",
+        		"zxGponOnuOpticalTransceiverLosRestore",
+        		"hwGponProfOltTFRecoverAlarmTrap",
+        		"hwGponProfRogueOntDisapearAlarmTrap",
+        		"hwXponProfOltLOSRecoverAlarmTrap",
+        		"zxGponOltLOSRestore",
+        		"tmnxEqPortSFPInserted",
+        		"hwGponOntSUFRecoverAlarmTrap",
+        		"hwGponOntConfigRecoverySuccAlarmTrap",
+        		"hwAlarmOpticalPortTemperatureRecover",
+        		"hwDevBoardTemperatureTooHighRecoverTrap",
+        		"hwOpticsTxPowerRestoreAlarmTrap",
+        		"hwGonuTxPowerExceedThreRestoreAlarmTrap",
+        		"hwGponRemoteOpticalModuleRecoverAlarmThresAlarmTrap",
+        		"hwGponLocalOpticalModuleRecoverWarnThresAlarmTrap",
+        		"hwXponProfLocalOpticalModuleRecoverAlarmThresAlarmTrap",
+        		"hwXponProfRemoteOpticalModuleRecoverAlarmThresAlarmTrap",
+        		"hwXponProfLocalOpticalModuleRecoverWarnThresAlarmTrap",
+        		"zxGponOltRxPowerNormalInformi",
+        		"zxGponOltRxPowerAlarmiRestore",
+        		"hwDevBoardHardRestore",
+        		"hwDevBoardRestore",
+        		"zxGponOltPEEiRestore",
+        		"zxGponOntPeeRestore",
+        		"hwXponProfOltLOSRecoverAlarmTrap",
+        		"zxGponOltLOSRestore"
+        		)
+        	)
+    then
+    	$log.setRestoreEvent(true);
+    	update($log);
+end
+
+
+rule "Restore LinkDown"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"LinkUp"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"LinkDown", "hwAlarmLOSOccurs", "hwGponnniOntLinkLosAlarmTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+
+	
+rule "Restore tmnxEqPortSFPRemoved"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"tmnxEqPortSFPInserted"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"tmnxEqPortSFPRemoved"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwAlarmEthernetMacLost"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwAlarmEthernetPortActive"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwAlarmEthernetMacLost"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwGponOntSFAlarmTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwGponOntSFRecoverAlarmTrap"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwGponOntSFAlarmTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwGponOntLOSAlarmTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwGponOntLOSRecoverAlarmTrap"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwGponOntLOSAlarmTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore zxGponOltLOSi"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"zxGponOltLosiRestore"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"zxGponOltLOSi"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore zxGponOltLOFi"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"zxGponOltLOFiRestore"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"zxGponOltLOFi"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore zxGponOltSFi"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"zxGponOltSFiRestore"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"zxGponOltSFi"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore zxGponOntLOS"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"zxGponOntLOSRestore"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"zxGponOntLOS"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore zxGponOntLOF"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"zxGponOntLOFRestore"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"zxGponOntLOF"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore zxGponOltLOS"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"zxGponOltLOSRestore"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"zxGponOltLOS"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore zxGponOltLOF"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"zxGponOltLOFRestore"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"zxGponOltLOF"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore zxGponOnuOpticalTransceiverLos"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"zxGponOnuOpticalTransceiverLosRestore"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"zxGponOnuOpticalTransceiverLos"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwGponProfOltTFAlarmTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwGponProfOltTFRecoverAlarmTrap"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwGponProfOltTFAlarmTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwGponProfOntIsRogueOntAlarmTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwGponProfRogueOntDisapearAlarmTrap"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwGponProfOntIsRogueOntAlarmTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwXponProfOltLOSAlarmTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwXponProfOltLOSRecoverAlarmTrap"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwXponProfOltLOSAlarmTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwGponOntSUFAlarmTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwGponOntSUFRecoverAlarmTrap"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwGponOntSUFAlarmTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwGponOntConfigRecoveryFailAlarmTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwGponOntConfigRecoverySuccAlarmTrap"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwGponOntConfigRecoveryFailAlarmTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwOpticsPortTemperatureHighAlarmTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwAlarmOpticalPortTemperatureRecover"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwOpticsPortTemperatureHighAlarmTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwDevBoardTemperatureTooHighTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwDevBoardTemperatureTooHighRecoverTrap"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwDevBoardTemperatureTooHighTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwOpticsTxPowerOutOfRangeAlarmTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwOpticsTxPowerRestoreAlarmTrap"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwOpticsTxPowerOutOfRangeAlarmTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwGonuTxPowerExceedThreAlarmTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwGonuTxPowerExceedThreRestoreAlarmTrap"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwGonuTxPowerExceedThreAlarmTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwGponRemoteOpticalModuleExceedAlarmThresAlarmTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwGponRemoteOpticalModuleRecoverAlarmThresAlarmTrap"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwGponRemoteOpticalModuleExceedAlarmThresAlarmTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwGponLocalOpticalModuleExceedWarnThresAlarmTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwGponLocalOpticalModuleRecoverWarnThresAlarmTrap"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwGponLocalOpticalModuleExceedWarnThresAlarmTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwXponProfLocalOpticalModuleExceedAlramThresAlarmTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwXponProfLocalOpticalModuleRecoverAlarmThresAlarmTrap"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwXponProfLocalOpticalModuleExceedAlramThresAlarmTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwXponProfRemoteOpticalModuleExceedAlarmThresAlarmTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwXponProfRemoteOpticalModuleRecoverAlarmThresAlarmTrap"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwXponProfRemoteOpticalModuleExceedAlarmThresAlarmTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwXponProfLocalOpticalModuleExceedWarnThresAlarmTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwXponProfLocalOpticalModuleRecoverWarnThresAlarmTrap"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwXponProfLocalOpticalModuleExceedWarnThresAlarmTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore zxGponOltRxPowerAbnormalInformi"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"zxGponOltRxPowerNormalInformi"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"zxGponOltRxPowerAbnormalInformi"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore zxGponOltRxPowerAlarmi"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"zxGponOltRxPowerAlarmiRestore"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"zxGponOltRxPowerAlarmi"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwDevBoardHardFaultTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwDevBoardHardRestore"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwDevBoardHardFaultTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore hwDevBoardFaultTrap"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"hwDevBoardRestore"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"hwDevBoardFaultTrap"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore zxGponOltPEEi"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"zxGponOltPEEiRestore"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"zxGponOltPEEi"},
+    			$log.getIp()
+    		 )
+    	);
+end
+	
+rule "Restore zxGponOntPee"
+	no-loop  
+	salience -1
+    when
+    	$log: LogDTO (
+    		nameEvent in (
+    			"zxGponOntPeeRestore"
+    		),restoreEvent == true
+    	)
+    then
+    	insert ( 
+    		new RestoreEventAlarmDTO(
+    			$log.getNameEvent(), 
+    			new String[] {"zxGponOntPee"},
+    			$log.getIp()
+    		 )
+    	);
+end
+
+
+
